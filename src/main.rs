@@ -1,8 +1,10 @@
-use k_fold_cross_validation::data_set::*;
-use k_fold_cross_validation::*;
-use std::time::Instant;
+use k_fold_cross_validation::{
+    hash_impl::{data_set::Total, Storage},
+    static_impl::{data_set::Total as StaticTotal, Storage as StaticStorage},
+};
+use std::{fs, time::Instant};
 
-fn lib() {
+fn hash_impl() {
     let time = Instant::now();
     let mut storage = Storage::default();
 
@@ -18,6 +20,26 @@ fn lib() {
     println!("Took {} ms", time.elapsed().as_millis());
 }
 
+fn static_hash_impl() {
+    let time = Instant::now();
+    let mut storage = StaticStorage::default();
+
+    let tax = fs::read_to_string("TAX.txt").expect("");
+    let fasta = fs::read_to_string("FASTA.txt").expect("");
+
+    if let Err(e) = storage.load_tax(&tax) {
+        eprintln!("{e}");
+    };
+    if let Err(e) = storage.load_fasta(&fasta) {
+        eprintln!("{e}");
+    };
+
+    let _ = StaticTotal::build(&storage, 5);
+
+    println!("{} ms", time.elapsed().as_millis());
+}
+
 fn main() {
-    lib();
+    hash_impl();
+    static_hash_impl();
 }
