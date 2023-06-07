@@ -1,8 +1,8 @@
-use std::error::Error;
+use std::{error::Error, sync::Arc};
 
 #[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct Species {
-    pub(crate) name: String,
+    pub(crate) name: Arc<String>,
     pub(crate) kingdom: String,
     pub(crate) phylum: String,
     pub(crate) class: String,
@@ -14,6 +14,10 @@ pub struct Species {
 }
 
 impl Species {
+    fn set_name(&mut self, name: &str) {
+        let name = Arc::new(name.to_owned());
+        self.name = name;
+    }
     fn set_part(&mut self, string: &str) -> Result<(), Box<dyn Error>> {
         let Some(first) = string
             .chars()
@@ -38,7 +42,7 @@ impl Species {
 
         let space = line.find('\t').ok_or("A")?;
         let name = &line[..space];
-        thing.name = name.to_owned();
+        thing.set_name(name);
 
         let details = &line[(space + 1)..(line.len() - 1)];
         let split = details.split(';');
@@ -52,6 +56,8 @@ impl Species {
 }
 #[cfg(test)]
 mod test {
+    use std::sync::Arc;
+
     use super::Species;
 
     #[test]
@@ -74,17 +80,14 @@ mod test {
     fn build() {
         let content = "KF294262.1	k__Eukaryota;p__Chordata;c__Mammalia;o__Dasyuromorphia;f__Dasyuridae;g__Murexia;s__Murexia longicaudata;";
         let test = Species::build(content).expect("");
-        let expected = Species {
-            name: "KF294262.1".to_owned(),
-            kingdom: "Eukaryota".to_owned(),
-            phylum: "Chordata".to_owned(),
-            class: "Mammalia".to_owned(),
-            order: "Dasyuromorphia".to_owned(),
-            family: "Dasyuridae".to_owned(),
-            genus: "Murexia".to_owned(),
-            species: "Murexia longicaudata".to_owned(),
-            genome: "".to_owned(),
-        };
+        let mut expected = Species::default();
+        expected.set_name("KF294262.1");
+        let _ = expected.set_part("k__Eukaryota");
+        let _ = expected.set_part("p__Chordata");
+        let _ = expected.set_part("c__Mammalia");
+        let _ = expected.set_part("o__Dasyuromorphia");
+        let _ = expected.set_part("g__Murexia");
+        let _ = expected.set_part("s__Murexia longicaudata");
         assert_eq!(test, expected);
     }
 }

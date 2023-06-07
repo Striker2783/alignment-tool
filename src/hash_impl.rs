@@ -1,7 +1,7 @@
 pub mod data_set;
 pub mod species;
 
-use std::{collections::HashMap, error::Error, fs, path::Path};
+use std::{cell::RefCell, collections::HashMap, error::Error, fs, path::Path, rc::Rc};
 
 use species::Species;
 
@@ -10,7 +10,7 @@ fn read_file<P: AsRef<Path>>(path: P) -> Result<String, Box<dyn Error>> {
 }
 #[derive(Default, Debug)]
 pub struct Storage {
-    data: HashMap<String, Species>,
+    data: HashMap<Rc<String>, Rc<RefCell<Species>>>,
 }
 
 impl Storage {
@@ -21,7 +21,8 @@ impl Storage {
         let contents = read_file(path)?;
         for x in contents.lines() {
             let species = Species::build(x)?;
-            self.data.insert(species.name.clone(), species);
+            let name = Rc::clone(&species.name);
+            self.data.insert(name, Rc::new(RefCell::new(species)));
         }
         Ok(())
     }
@@ -35,15 +36,18 @@ impl Storage {
                 .next()
                 else {Err(format!("{name} has no corresponding genome"))?};
 
-            if let Some(x) = self.data.get_mut(name) {
-                x.genome = data.to_owned();
+            if let Some(x) = self.data.get(&Rc::new(name.to_owned())) {
+                let clone = &Rc::clone(x);
+                let mut species = clone.borrow_mut();
+                species.genome = data.to_owned();
             } else {
+                let name = Rc::new(name.to_owned());
                 let new_species = Species {
-                    name: name.to_owned(),
+                    name: Rc::clone(&name),
                     genome: data.to_owned(),
                     ..Default::default()
                 };
-                self.data.insert(name.to_owned(), new_species);
+                self.data.insert(name, Rc::new(RefCell::new(new_species)));
             };
         }
 

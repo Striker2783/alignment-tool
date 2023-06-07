@@ -1,4 +1,9 @@
-use rayon::prelude::IntoParallelRefIterator;
+use std::{
+    error::Error,
+    sync::{Arc, Mutex},
+};
+
+use rayon::prelude::*;
 
 use super::{Species, Storage};
 
@@ -8,25 +13,27 @@ pub struct Total(Vec<Dataset>);
 #[derive(Debug, Default)]
 pub struct Dataset {
     #[allow(dead_code)]
-    training: Vec<Species>,
+    training: Vec<Arc<Species>>,
     #[allow(dead_code)]
-    testing: Vec<Species>,
+    testing: Vec<Arc<Species>>,
 }
 
 impl Dataset {
-    pub fn new(training: Vec<Species>, testing: Vec<Species>) -> Self {
+    pub fn new(training: Vec<Arc<Species>>, testing: Vec<Arc<Species>>) -> Self {
         Self { training, testing }
     }
 }
 
 impl Total {
-    pub fn build(storage: &Storage, k: u32) -> Total {
+    pub fn build(storage: Storage, k: u32) -> Result<Total, Box<dyn Error>> {
         let mut total = Total::default();
-        let mut values: Vec<Species> = storage
-            .data
-            .borrow()
-            .iter()
-            .map(|(_, species)| species.clone())
+        let mut lock = storage.data.lock();
+        let Ok(lock) = lock.as_mut() else {
+            Err("What")?
+        };
+        let mut values: Vec<Arc<Mutex<Species>>> = lock
+            .par_iter()
+            .map(|(_, species)| Arc::clone(species))
             .collect();
         for i in 0..k {
             let len = values.len();
@@ -37,10 +44,10 @@ impl Total {
                 len / k as usize * (i + 1) as usize
             };
 
-            let training = values.drain(lower..upper).collect();
-            let data_set = Dataset::new(training, values.to_vec());
+            let training = values.par_drain(lower..upper).collect();
+            let data_set = Dataset::new(training, values.clone());
             total.0.push(data_set);
         }
-        total
+        Ok(total)
     }
 }

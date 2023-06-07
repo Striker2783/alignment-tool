@@ -1,26 +1,29 @@
+use std::{cell::RefCell, rc::Rc};
+
 use super::{Species, Storage};
 
 #[derive(Debug, Default)]
-pub struct Total<'a>(Vec<Dataset<'a>>);
+pub struct Total(Vec<Dataset>);
 
 #[derive(Debug, Default)]
-pub struct Dataset<'a> {
+pub struct Dataset {
     #[allow(dead_code)]
-    training: Vec<&'a Species>,
+    training: Vec<Rc<RefCell<Species>>>,
     #[allow(dead_code)]
-    testing: Vec<&'a Species>,
+    testing: Vec<Rc<RefCell<Species>>>,
 }
 
-impl<'a> Dataset<'a> {
-    pub fn new(training: Vec<&'a Species>, testing: Vec<&'a Species>) -> Self {
+impl Dataset {
+    pub fn new(training: Vec<Rc<RefCell<Species>>>, testing: Vec<Rc<RefCell<Species>>>) -> Self {
         Self { training, testing }
     }
 }
 
-impl<'a> Total<'a> {
+impl Total {
     pub fn build(storage: &Storage, k: u32) -> Total {
         let mut total = Total::default();
-        let mut values: Vec<&Species> = storage.data.values().collect();
+        let mut values: Vec<Rc<RefCell<Species>>> =
+            storage.data.values().map(|a| Rc::clone(a)).collect();
         for i in 0..k {
             let len = values.len();
             let lower = len / k as usize * i as usize;
@@ -31,7 +34,7 @@ impl<'a> Total<'a> {
             };
 
             let training = values.drain(lower..upper).collect();
-            let data_set = Dataset::new(training, values.to_vec());
+            let data_set = Dataset::new(training, values.clone());
             total.0.push(data_set);
         }
         total

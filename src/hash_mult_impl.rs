@@ -2,7 +2,14 @@ pub mod data_set;
 pub mod species;
 
 use rayon::prelude::*;
-use std::{cell::RefCell, collections::HashMap, error::Error, fs, path::Path};
+use std::{
+    borrow::BorrowMut,
+    collections::HashMap,
+    error::Error,
+    fs,
+    path::Path,
+    sync::{Arc, Mutex},
+};
 
 use species::Species;
 
@@ -11,7 +18,7 @@ fn read_file<P: AsRef<Path>>(path: P) -> Result<String, Box<dyn Error>> {
 }
 #[derive(Default, Debug)]
 pub struct Storage {
-    data: RefCell<HashMap<String, Species>>,
+    data: Arc<Mutex<HashMap<String, Arc<Mutex<Species>>>>>,
 }
 
 impl Storage {
@@ -22,13 +29,13 @@ impl Storage {
         let contents = read_file(path)?;
         contents
             .par_lines()
-            .for_each_with(RefCell::clone(&self.data), |hash, line| {
-                let hash = hash.get_mut();
+            .for_each_with(Arc::clone(&self.data), |hash, line| {
                 let Ok(species) = Species::build(line) else {return;};
                 let name = species.name.to_owned();
-                hash.insert(name, species);
+                let lock = &mut hash.lock();
+                let Ok(hash) = lock.as_mut() else{return;};
+                hash.insert(name, Arc::new(Mutex::new(species)));
             });
-
         Ok(())
     }
     pub fn load_fasta_file<P: AsRef<Path>>(&mut self, path: P) -> Result<(), Box<dyn Error>> {
@@ -44,16 +51,23 @@ impl Storage {
         }
         lines
             .par_iter()
-            .for_each_with(self.data.clone(), |init, (name, data)| {
-                if let Some(x) = init.get_mut().get_mut(*name) {
-                    x.genome = (*data).to_owned();
+            .for_each_with(Arc::clone(&self.data), |hash, (name, data)| {
+                let lock = &mut hash.lock();
+                let Ok(hash) = lock.as_mut() else {return;};
+                if let Some(x) = hash.get(*name) {
+                    let mut x = Arc::clone(&x).borrow_mut();
+                    let mut lock = match x.lock() {
+                        Ok(a) => a,
+                        Err(_) => return,
+                    };
+                    lock.borrow_mut().genome = (*data).to_owned();
                 } else {
                     let new_species = Species {
                         name: (*name).to_owned(),
                         genome: (*data).to_owned(),
                         ..Default::default()
                     };
-                    init.get_mut().insert((*name).to_owned(), new_species);
+                    hash.insert((*name).to_owned(), Arc::new(Mutex::new(new_species)));
                 }
             });
 
