@@ -1,8 +1,8 @@
 pub mod data_set;
 pub mod species;
 
-use rayon::{prelude::*, str::Lines};
-use std::{cell::RefCell, collections::HashMap, error::Error, fs, path::Path, time::Instant};
+use rayon::prelude::*;
+use std::{cell::RefCell, collections::HashMap, error::Error, fs, path::Path};
 
 use species::Species;
 
@@ -34,29 +34,28 @@ impl Storage {
     pub fn load_fasta_file<P: AsRef<Path>>(&mut self, path: P) -> Result<(), Box<dyn Error>> {
         let contents = read_file(path)?;
         let mut line_iterator = contents.lines();
-        // contents
-        //     .lines()
-        //     .step_by(2)
-        //     .zip(contents.lines().skip(1).step_by(2)).par_bridge()
-        let mut_data = self.data.get_mut();
-
+        let mut lines: Vec<(&str, &str)> = vec![];
         while let Some(name) = line_iterator.next() {
             let name = &name[1..];
             let Some(data) = line_iterator
                 .next()
                 else {Err(format!("{name} has no corresponding genome"))?};
-
-            if let Some(x) = mut_data.get_mut(name) {
-                x.genome = data.to_owned();
-            } else {
-                let new_species = Species {
-                    name: name.to_owned(),
-                    genome: data.to_owned(),
-                    ..Default::default()
-                };
-                self.data.get_mut().insert(name.to_owned(), new_species);
-            };
+            lines.push((name, data));
         }
+        lines
+            .par_iter()
+            .for_each_with(self.data.clone(), |init, (name, data)| {
+                if let Some(x) = init.get_mut().get_mut(*name) {
+                    x.genome = (*data).to_owned();
+                } else {
+                    let new_species = Species {
+                        name: (*name).to_owned(),
+                        genome: (*data).to_owned(),
+                        ..Default::default()
+                    };
+                    init.get_mut().insert((*name).to_owned(), new_species);
+                }
+            });
 
         Ok(())
     }

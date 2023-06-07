@@ -22,7 +22,12 @@ impl Dataset {
 impl Total {
     pub fn build(storage: &Storage, k: u32) -> Total {
         let mut total = Total::default();
-        let mut values: Vec<&Species> = storage.data.borrow().iter().collect();
+        let mut values: Vec<Species> = storage
+            .data
+            .borrow()
+            .iter()
+            .map(|(_, species)| species.clone())
+            .collect();
         for i in 0..k {
             let len = values.len();
             let lower = len / k as usize * i as usize;
