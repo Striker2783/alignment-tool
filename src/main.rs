@@ -2,7 +2,7 @@ use k_fold_cross_validation::{
     hash_impl::{data_set::Total, Storage},
     hash_mult_impl::{data_set::Total as MultTotal, Storage as MultStorage},
 };
-use std::{fs, time::Instant};
+use std::time::Instant;
 
 fn hash_impl() {
     let time = Instant::now();
