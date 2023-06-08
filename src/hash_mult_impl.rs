@@ -35,7 +35,6 @@ impl Storage {
         });
         Ok(())
     }
-    /// No multithreading because hashmap ;-;
     pub fn load_fasta_file<P: AsRef<Path>>(&mut self, path: P) -> Result<(), Box<dyn Error>> {
         let contents = read_file(path)?;
 
