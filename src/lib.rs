@@ -1,7 +1,4 @@
-use std::{
-    env::{self, Args},
-    error::Error,
-};
+use std::{env::Args, error::Error};
 
 pub mod hash_mult_impl;
 
