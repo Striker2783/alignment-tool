@@ -53,6 +53,22 @@ impl Species {
 
         Ok(thing)
     }
+    pub fn get_tax(&self) -> String {
+        format!(
+            "{}\tk__{};p__{};c__{};o__{};f__{};g__{};s__{};",
+            self.name,
+            self.kingdom,
+            self.phylum,
+            self.class,
+            self.order,
+            self.family,
+            self.genus,
+            self.species
+        )
+    }
+    pub fn get_fasta(&self) -> String {
+        format!(">{}\n{}", self.name, self.genome)
+    }
 }
 #[cfg(test)]
 mod test {
