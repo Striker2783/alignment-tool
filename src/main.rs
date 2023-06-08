@@ -1,7 +1,6 @@
 use k_fold_cross_validation::{
     hash_impl::{data_set::Total, Storage},
     hash_mult_impl::{data_set::Total as MultTotal, Storage as MultStorage},
-    static_impl::{data_set::Total as StaticTotal, Storage as StaticStorage},
 };
 use std::{fs, time::Instant};
 
@@ -33,26 +32,7 @@ fn hash_mult_impl() {
     println!("Hash Concurrency: {} ms", time.elapsed().as_millis());
 }
 
-fn static_hash_impl() {
-    let time = Instant::now();
-    let mut storage = StaticStorage::default();
-
-    let tax = fs::read_to_string("TAX.txt").expect("");
-    let fasta = fs::read_to_string("FASTA.txt").expect("");
-
-    if let Err(e) = storage.load_tax(&tax) {
-        eprintln!("{e}");
-    };
-    if let Err(e) = storage.load_fasta(&fasta) {
-        eprintln!("{e}");
-    };
-
-    let _ = StaticTotal::build(&storage, 5);
-    println!("Static Hash: {} ms", time.elapsed().as_millis());
-}
-
 fn main() {
-    static_hash_impl();
     hash_impl();
     hash_mult_impl();
 }
