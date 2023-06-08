@@ -1,7 +1,7 @@
 use std::{
     error::Error,
     fs::{self, File},
-    io::Write,
+    io::{BufWriter, Write},
     path::Path,
     sync::{Arc, Mutex},
 };
@@ -28,15 +28,17 @@ impl Dataset {
         Self { training, testing }
     }
     fn create_tax_file(species: &SpeciesVec, file: &mut File) {
+        let mut writer = BufWriter::new(file);
         for species in species {
             let Ok(species) = species.lock() else {continue;};
-            let _ = writeln!(file, "{}", &species.get_tax());
+            let _ = writeln!(writer, "{}", &species.get_tax());
         }
     }
     fn create_fasta_file(species: &SpeciesVec, file: &mut File) {
+        let mut writer = BufWriter::new(file);
         for species in species {
             let Ok(species) = species.lock() else {continue;};
-            let _ = writeln!(file, "{}", &species.get_fasta());
+            let _ = writeln!(writer, "{}", &species.get_fasta());
         }
     }
     pub fn create_files(&self, directory: &Path) -> Result<(), Box<dyn Error>> {
@@ -70,6 +72,39 @@ impl Dataset {
 
 impl Total {
     pub fn build(storage: &Storage, k: u32) -> Total {
+        let mut total = Total::default();
+        let values: Vec<_> = storage
+            .data
+            .par_iter()
+            .map(|(_, species)| Arc::clone(species))
+            .collect();
+
+        for i in 0..k {
+            let len = values.len();
+            let lower = len / k as usize * i as usize;
+            let upper = if i == k - 1 {
+                len
+            } else {
+                len / k as usize * (i + 1) as usize
+            };
+
+            let data_set = Dataset::new(
+                values[lower..upper]
+                    .par_iter()
+                    .map(|species| Arc::clone(species))
+                    .collect(),
+                [&values[..lower], &values[upper..]]
+                    .concat()
+                    .par_iter()
+                    .map(|species| Arc::clone(species))
+                    .collect(),
+            );
+            total.0.push(data_set);
+        }
+
+        total
+    }
+    pub fn build_bad(storage: &Storage, k: u32) -> Total {
         let mut total = Total::default();
         let mut values: SpeciesVec = storage
             .data

@@ -46,7 +46,7 @@ impl Storage {
 
         contents
             .par_lines()
-            .collect::<Vec<&str>>()
+            .collect::<Vec<_>>()
             .par_chunks_exact(2)
             .for_each(|line| {
                 let name = &line[0][1..];

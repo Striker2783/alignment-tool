@@ -14,6 +14,7 @@ fn hash_mult_impl() {
         eprintln!("{e}");
     };
     let data_set = MultTotal::build(&storage, 5);
+
     let path = Path::new("files");
     if let Err(e) = fs::create_dir(path) {
         eprintln!("{e}");
