@@ -1,9 +1,7 @@
 pub mod data_set;
 pub mod species;
 
-use rayon::prelude::*;
 use std::{
-    borrow::BorrowMut,
     collections::HashMap,
     error::Error,
     fs,
@@ -11,14 +9,16 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+use rayon::{prelude::ParallelIterator, slice::ParallelSlice, str::ParallelString};
 use species::Species;
 
 fn read_file<P: AsRef<Path>>(path: P) -> Result<String, Box<dyn Error>> {
     Ok(fs::read_to_string(path)?)
 }
+type MultiMut<T> = Arc<Mutex<T>>;
 #[derive(Default, Debug)]
 pub struct Storage {
-    data: Arc<Mutex<HashMap<String, Arc<Mutex<Species>>>>>,
+    data: MultiMut<HashMap<Arc<String>, MultiMut<Species>>>,
 }
 
 impl Storage {
@@ -27,48 +27,40 @@ impl Storage {
         P: AsRef<Path>,
     {
         let contents = read_file(path)?;
-        contents
-            .par_lines()
-            .for_each_with(Arc::clone(&self.data), |hash, line| {
-                let Ok(species) = Species::build(line) else {return;};
-                let name = species.name.to_owned();
-                let lock = &mut hash.lock();
-                let Ok(hash) = lock.as_mut() else{return;};
-                hash.insert(name, Arc::new(Mutex::new(species)));
-            });
+        contents.par_lines().for_each(|line| {
+            let Ok(species) = Species::build(line) else {return;};
+            let name = Arc::clone(&species.name);
+            let mut map = self.data.lock().unwrap();
+            map.insert(name, Arc::new(Mutex::new(species)));
+        });
         Ok(())
     }
+    /// No multithreading because hashmap ;-;
     pub fn load_fasta_file<P: AsRef<Path>>(&mut self, path: P) -> Result<(), Box<dyn Error>> {
         let contents = read_file(path)?;
-        let mut line_iterator = contents.lines();
-        let mut lines: Vec<(&str, &str)> = vec![];
-        while let Some(name) = line_iterator.next() {
-            let name = &name[1..];
-            let Some(data) = line_iterator
-                .next()
-                else {Err(format!("{name} has no corresponding genome"))?};
-            lines.push((name, data));
-        }
-        lines
-            .par_iter()
-            .for_each_with(Arc::clone(&self.data), |hash, (name, data)| {
-                let lock = &mut hash.lock();
-                let Ok(hash) = lock.as_mut() else {return;};
-                if let Some(x) = hash.get(*name) {
-                    let mut x = Arc::clone(&x).borrow_mut();
-                    let mut lock = match x.lock() {
-                        Ok(a) => a,
-                        Err(_) => return,
-                    };
-                    lock.borrow_mut().genome = (*data).to_owned();
-                } else {
-                    let new_species = Species {
-                        name: (*name).to_owned(),
-                        genome: (*data).to_owned(),
-                        ..Default::default()
-                    };
-                    hash.insert((*name).to_owned(), Arc::new(Mutex::new(new_species)));
-                }
+
+        contents
+            .par_lines()
+            .collect::<Vec<&str>>()
+            .par_chunks_exact(2)
+            .for_each(|line| {
+                let name = &line[0][1..];
+
+                let mut map = self.data.lock().unwrap();
+                let Some(x) = map.get(&Arc::new(name.to_owned())) else {
+                let name = Arc::new(name.to_owned());
+                let new_species = Species {
+                    name: Arc::clone(&name),
+                    genome: line[1].to_owned(),
+                    ..Default::default()
+                };
+                map.insert(name, Arc::new(Mutex::new(new_species)));
+                return;
+            };
+                let clone = Arc::clone(x);
+                drop(map);
+                let mut species = clone.lock().unwrap();
+                species.genome = line[1].to_owned();
             });
 
         Ok(())

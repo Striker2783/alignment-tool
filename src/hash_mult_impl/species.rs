@@ -14,9 +14,9 @@ pub struct Species {
 }
 
 impl Species {
+    #[inline]
     fn set_name(&mut self, name: &str) {
-        let name = Arc::new(name.to_owned());
-        self.name = name;
+        self.name = Arc::new(name.to_owned());
     }
     fn set_part(&mut self, string: &str) -> Result<(), Box<dyn Error>> {
         let Some(first) = string
@@ -80,14 +80,17 @@ mod test {
     fn build() {
         let content = "KF294262.1	k__Eukaryota;p__Chordata;c__Mammalia;o__Dasyuromorphia;f__Dasyuridae;g__Murexia;s__Murexia longicaudata;";
         let test = Species::build(content).expect("");
-        let mut expected = Species::default();
-        expected.set_name("KF294262.1");
-        let _ = expected.set_part("k__Eukaryota");
-        let _ = expected.set_part("p__Chordata");
-        let _ = expected.set_part("c__Mammalia");
-        let _ = expected.set_part("o__Dasyuromorphia");
-        let _ = expected.set_part("g__Murexia");
-        let _ = expected.set_part("s__Murexia longicaudata");
+        let expected = Species {
+            name: Arc::new("KF294262.1".to_owned()),
+            kingdom: "Eukaryota".to_owned(),
+            phylum: "Chordata".to_owned(),
+            class: "Mammalia".to_owned(),
+            order: "Dasyuromorphia".to_owned(),
+            family: "Dasyuridae".to_owned(),
+            genus: "Murexia".to_owned(),
+            species: "Murexia longicaudata".to_owned(),
+            genome: "".to_owned(),
+        };
         assert_eq!(test, expected);
     }
 }
