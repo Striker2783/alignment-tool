@@ -1,26 +1,10 @@
-use k_fold_cross_validation::{
-    hash_mult_impl::{data_set::Total as MultTotal, Storage as MultStorage},
-    Config,
-};
-use std::{env, fs, path::Path, process, time::Instant};
+use k_fold_cross_validation::{hash_mult_impl::data_set::Total, Config};
+use std::{env, process, time::Instant};
 
 fn hash_mult_impl(config: &Config) {
     let time = Instant::now();
-    let mut storage = MultStorage::default();
 
-    if let Err(e) = storage.load_tax_file(config.tax()) {
-        eprintln!("{e}");
-    }
-    if let Err(e) = storage.load_fasta_file(config.fasta()) {
-        eprintln!("{e}");
-    };
-    let data_set = MultTotal::build(&storage, config.k_fold());
-
-    let path = Path::new("files");
-    if let Err(e) = fs::create_dir(path) {
-        eprintln!("{e}");
-    };
-    if let Err(e) = data_set.write_data(path) {
+    if let Err(e) = Total::run(config) {
         eprintln!("{e}");
     };
 

@@ -8,6 +8,8 @@ use std::{
 
 use rayon::prelude::{IntoParallelRefIterator, ParallelDrainRange, ParallelIterator};
 
+use crate::Config;
+
 use super::{Species, Storage};
 
 #[derive(Debug, Default)]
@@ -71,6 +73,17 @@ impl Dataset {
 }
 
 impl Total {
+    pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
+        let mut storage = Storage::default();
+        storage.load_tax_file(&config.tax)?;
+        storage.load_fasta_file(&config.fasta)?;
+        let data_set = Self::build(&storage, config.k_fold);
+        let path = Path::new("files");
+        fs::create_dir(path)?;
+        data_set.write_data(path)?;
+
+        Ok(())
+    }
     pub fn build(storage: &Storage, k: u32) -> Total {
         let mut total = Total::default();
         let values: Vec<_> = storage
