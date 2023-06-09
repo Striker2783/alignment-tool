@@ -1,4 +1,8 @@
-use std::{env::Args, error::Error};
+use std::{
+    env::{self, Args},
+    error::Error,
+    path::PathBuf,
+};
 
 pub mod hash_mult_impl;
 
@@ -6,13 +10,15 @@ pub struct Config {
     tax: String,
     fasta: String,
     k_fold: u32,
+    dir: PathBuf,
 }
 impl Default for Config {
     fn default() -> Self {
         Self {
-            tax: Default::default(),
-            fasta: Default::default(),
             k_fold: 5,
+            dir: Default::default(),
+            fasta: Default::default(),
+            tax: Default::default(),
         }
     }
 }
@@ -21,17 +27,20 @@ impl Config {
         args.next();
         let tax = args.next().ok_or("No tax argument")?;
         let fasta = args.next().ok_or("No Fasta argument")?;
+        let dir = env::current_dir()?;
         if let Some(k) = args.next() {
             return Ok(Config {
                 tax,
                 fasta,
                 k_fold: k.parse()?,
+                dir,
             });
         }
 
         Ok(Config {
             tax,
             fasta,
+            dir,
             ..Default::default()
         })
     }

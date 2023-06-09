@@ -78,7 +78,8 @@ impl Total {
         storage.load_tax_file(&config.tax)?;
         storage.load_fasta_file(&config.fasta)?;
         let data_set = Self::build(&storage, config.k_fold);
-        let path = Path::new("files");
+        let path = config.dir.join("files");
+        let path = Path::new(&path);
         fs::create_dir(path)?;
         data_set.write_data(path)?;
 
@@ -115,28 +116,6 @@ impl Total {
             total.0.push(data_set);
         }
 
-        total
-    }
-    pub fn build_bad(storage: &Storage, k: u32) -> Total {
-        let mut total = Total::default();
-        let mut values: SpeciesVec = storage
-            .data
-            .par_iter()
-            .map(|(_, a)| Arc::clone(a))
-            .collect();
-        for i in 0..k {
-            let len = values.len();
-            let lower = len / k as usize * i as usize;
-            let upper = if i == k - 1 {
-                len
-            } else {
-                len / k as usize * (i + 1) as usize
-            };
-
-            let training = values.par_drain(lower..upper).collect();
-            let data_set = Dataset::new(training, values.clone());
-            total.0.push(data_set);
-        }
         total
     }
     pub fn write_data(&self, path: &Path) -> Result<(), Box<dyn Error>> {
