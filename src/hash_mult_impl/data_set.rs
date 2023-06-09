@@ -89,12 +89,12 @@ impl Total {
             };
 
             let data_set = Dataset::new(
-                values[lower..upper]
+                [&values[..lower], &values[upper..]]
+                    .concat()
                     .par_iter()
                     .map(|species| Arc::clone(species))
                     .collect(),
-                [&values[..lower], &values[upper..]]
-                    .concat()
+                values[lower..upper]
                     .par_iter()
                     .map(|species| Arc::clone(species))
                     .collect(),
