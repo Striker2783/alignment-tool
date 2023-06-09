@@ -6,7 +6,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use rayon::prelude::{IntoParallelRefIterator, ParallelDrainRange, ParallelIterator};
+use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
 use crate::Config;
 
