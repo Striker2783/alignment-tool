@@ -6,6 +6,8 @@ use std::{
     path::Path,
 };
 
+use rayon::{prelude::ParallelIterator, str::ParallelString};
+
 use super::config::Config;
 
 type Val = (String, Option<(String, String, String)>);
@@ -15,6 +17,26 @@ pub struct Metax {
     tax: HashMap<String, Val>,
 }
 impl Metax {
+    fn multi_make_tax(&mut self, tax: &Path) -> Result<(), Box<dyn Error>> {
+        let contents = fs::read_to_string(tax)?;
+        let items: Vec<(&str, &str)> = contents
+            .par_lines()
+            .filter_map(|line| {
+                let mut split = line.trim().split('\t');
+                let Some(name) = split.next() else {
+                    return None;
+                };
+                let Some(line) = split.next() else {
+                    return None;
+                };
+                Some((name, line))
+            })
+            .collect();
+        for (name, line) in items {
+            self.tax.insert(name.to_owned(), (line.to_owned(), None));
+        }
+        Ok(())
+    }
     fn make_tax(&mut self, tax: &Path) -> Result<(), Box<dyn Error>> {
         let contents = fs::read_to_string(tax)?;
         for line in contents.lines() {
@@ -26,6 +48,25 @@ impl Metax {
         Ok(())
     }
     fn use_vsearch(&mut self, vsearch: &Path) -> Result<(), Box<dyn Error>> {
+        let contents = fs::read_to_string(vsearch)?;
+        for line in contents.lines() {
+            let mut split = line.split('\t');
+            let id = split.next().ok_or("No identitifier")?;
+
+            let target = split.next().ok_or("No target id found")?.to_string();
+            let idea = split.next().ok_or("No ID found")?.to_string();
+            let len = split.next().ok_or("No length found")?.to_string();
+
+            let Some(thing) = self.tax.get_mut(id) else {
+                eprintln!("No key named {}.", id);
+                continue;
+            };
+            thing.1 = Some((target, idea, len));
+        }
+
+        Ok(())
+    }
+    fn multi_use_vsearch(&mut self, vsearch: &Path) -> Result<(), Box<dyn Error>> {
         let contents = fs::read_to_string(vsearch)?;
         for line in contents.lines() {
             let mut split = line.split('\t');
