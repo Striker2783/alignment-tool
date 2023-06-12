@@ -1,5 +1,5 @@
 use k_fold_cross_validation::{
-    hash_mult_impl::{config::Config, data_set::Total},
+    k_fold::{config::Config, data_set::Total},
     Configs,
 };
 use std::{env, process, time::Instant};

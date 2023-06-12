@@ -1,8 +1,8 @@
 use std::{env::Args, error::Error};
 
-use hash_mult_impl::config::Config;
+use k_fold::config::Config;
 
-pub mod hash_mult_impl;
+pub mod k_fold;
 
 fn print_help() {
     eprintln!("k (tax_file) (fasta_file) (k = 5)");

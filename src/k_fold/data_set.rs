@@ -8,7 +8,7 @@ use std::{
 
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
-use crate::hash_mult_impl::config::Config;
+use crate::k_fold::config::Config;
 
 use super::{Species, Storage};
 
