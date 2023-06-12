@@ -2,18 +2,22 @@ use std::{env::Args, error::Error};
 
 use k_fold::config::Config as k_config;
 use metax::config::Config as metax_config;
+use trim::config::Config as trim_config;
 
 pub mod k_fold;
 pub mod metax;
+pub mod trim;
 
 fn print_help() {
     eprintln!("k (tax_file) (fasta_file) (k = 5)");
-    eprintln!("meta unimplemented");
+    eprintln!("meta (tax_file) (vsearch_file) (output file)");
+    eprintln!("trim (meta_file) (output file)");
 }
 
 pub enum Configs {
     K(k_config),
     Metax(metax_config),
+    Trim(trim_config),
     Help,
 }
 
@@ -28,6 +32,10 @@ impl Configs {
             "meta" => {
                 let config = metax_config::build(args)?;
                 Ok(Self::Metax(config))
+            }
+            "trim" => {
+                let config = trim_config::build(args)?;
+                Ok(Self::Trim(config))
             }
             "help" | "h" => {
                 print_help();
