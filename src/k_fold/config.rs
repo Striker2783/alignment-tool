@@ -21,7 +21,7 @@ impl Default for Config {
     }
 }
 impl Config {
-    pub fn build(mut args: Args) -> Result<Self, Box<dyn Error>> {
+    pub fn build(args: &mut Args) -> Result<Self, Box<dyn Error>> {
         let tax = args.next().ok_or("No tax argument")?;
         let fasta = args.next().ok_or("No Fasta argument")?;
         let dir = env::current_dir()?;
