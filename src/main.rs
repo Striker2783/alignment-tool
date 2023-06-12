@@ -1,7 +1,7 @@
-use k_fold_cross_validation::{hash_mult_impl::data_set::Total, Config};
+use k_fold_cross_validation::hash_mult_impl::{config::Config, data_set::Total};
 use std::{env, process, time::Instant};
 
-fn hash_mult_impl(config: &Config) {
+fn k_fold(config: &Config) {
     let time = Instant::now();
 
     if let Err(e) = Total::run(config) {
@@ -19,5 +19,5 @@ fn main() {
             process::exit(1);
         }
     };
-    hash_mult_impl(&config);
+    k_fold(&config);
 }

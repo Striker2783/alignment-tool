@@ -8,7 +8,7 @@ use std::{
 
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
-use crate::Config;
+use crate::hash_mult_impl::config::Config;
 
 use super::{Species, Storage};
 
@@ -106,12 +106,9 @@ impl Total {
                 [&values[..lower], &values[upper..]]
                     .concat()
                     .par_iter()
-                    .map(|species| Arc::clone(species))
+                    .map(Arc::clone)
                     .collect(),
-                values[lower..upper]
-                    .par_iter()
-                    .map(|species| Arc::clone(species))
-                    .collect(),
+                values[lower..upper].par_iter().map(Arc::clone).collect(),
             );
             total.0.push(data_set);
         }
@@ -119,7 +116,7 @@ impl Total {
         total
     }
     pub fn write_data(&self, path: &Path) -> Result<(), Box<dyn Error>> {
-        (&self.0)
+        self.0
             .iter()
             .enumerate()
             .collect::<Vec<_>>()

@@ -1,3 +1,4 @@
+pub mod config;
 pub mod data_set;
 pub mod species;
 
