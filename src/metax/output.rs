@@ -66,25 +66,6 @@ impl Metax {
 
         Ok(())
     }
-    fn multi_use_vsearch(&mut self, vsearch: &Path) -> Result<(), Box<dyn Error>> {
-        let contents = fs::read_to_string(vsearch)?;
-        for line in contents.lines() {
-            let mut split = line.split('\t');
-            let id = split.next().ok_or("No identitifier")?;
-
-            let target = split.next().ok_or("No target id found")?.to_string();
-            let idea = split.next().ok_or("No ID found")?.to_string();
-            let len = split.next().ok_or("No length found")?.to_string();
-
-            let Some(thing) = self.tax.get_mut(id) else {
-                eprintln!("No key named {}.", id);
-                continue;
-            };
-            thing.1 = Some((target, idea, len));
-        }
-
-        Ok(())
-    }
     fn out(&self, path: &Path) -> Result<(), Box<dyn Error>> {
         let mut file = File::create(path)?;
         let mut writer = BufWriter::new(&mut file);
