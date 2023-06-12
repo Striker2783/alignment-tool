@@ -1,4 +1,7 @@
-use k_fold_cross_validation::hash_mult_impl::{config::Config, data_set::Total};
+use k_fold_cross_validation::{
+    hash_mult_impl::{config::Config, data_set::Total},
+    Configs,
+};
 use std::{env, process, time::Instant};
 
 fn k_fold(config: &Config) {
@@ -11,13 +14,19 @@ fn k_fold(config: &Config) {
     println!("Hash Concurrency: {} ms", time.elapsed().as_millis());
 }
 fn main() {
-    let args = env::args();
-    let config = match Config::build(args) {
+    let mut args = env::args();
+    args.next();
+
+    let config = match Configs::get(args) {
         Ok(config) => config,
         Err(e) => {
             eprintln!("{e}");
             process::exit(1);
         }
     };
-    k_fold(&config);
+    match config {
+        Configs::K(config) => k_fold(&config),
+        Configs::Metax => todo!(),
+        Configs::Help => (),
+    }
 }
