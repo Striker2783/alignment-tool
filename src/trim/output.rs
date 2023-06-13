@@ -6,6 +6,8 @@ use std::{
     path::Path,
 };
 
+use rayon::{prelude::ParallelIterator, str::ParallelString};
+
 use super::config::Config;
 #[derive(Debug, Default)]
 pub struct Trim {
@@ -46,26 +48,49 @@ impl Trim {
         let mut out = Self::default();
 
         let contents = fs::read_to_string(meta)?;
-        for line in contents.lines() {
-            let mut split = line.trim().split('\t');
-            let id = split
-                .next()
-                .ok_or(format!("Failed to get id for {}", line))?
-                .to_string();
-            let mut lineage: Vec<&str> = split
-                .next()
-                .ok_or(format!("Failed to get lineage for {}", line))?
-                .split(';')
-                .collect();
-            let _score: f64 = split.next_back().ok_or("No Score")?.parse()?;
-            let pi: f64 = split
-                .next_back()
-                .ok_or(format!("No percentage for {}", line))?
-                .parse()?;
-
-            let Some(x) = Self::get_x(&mut lineage, pi) else {
-                continue;
+        let things: Vec<_> = contents
+            .par_lines()
+            .filter_map(|line| {
+                let mut split = line.trim().split('\t');
+                let Some(id) = split.next() else {
+                eprintln!("Failed to get id for {}", line);
+                return None;
             };
+                let Some(lineage) = split.next() else {
+                eprintln!("Failed to get lineage for {}", line);
+                return None;
+            };
+                let mut lineage: Vec<_> = lineage.split(';').collect();
+                let Some(_score) = split.next_back() else {
+                eprintln!("Failed to get score for {}", line);
+                return None;
+            };
+                let _score: f64 = match _score.parse() {
+                    Ok(a) => a,
+                    Err(e) => {
+                        eprintln!("{e}");
+                        return None;
+                    }
+                };
+                let Some(pi) = split.next_back() else {
+                eprintln!("Failed to get percentage for {}", line);
+                return None;
+            };
+                let pi: f64 = match pi.parse() {
+                    Ok(a) => a,
+                    Err(e) => {
+                        eprintln!("{e}");
+                        return None;
+                    }
+                };
+
+                let Some(x) = Self::get_x(&mut lineage, pi) else {
+                return None;
+            };
+                Some((id.to_string(), x))
+            })
+            .collect();
+        for (id, x) in things {
             out.map.insert(id, x);
         }
 
