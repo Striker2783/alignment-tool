@@ -17,7 +17,7 @@ pub struct Metax {
     tax: HashMap<String, Val>,
 }
 impl Metax {
-    fn multi_make_tax(&mut self, tax: &Path) -> Result<(), Box<dyn Error>> {
+    fn make_tax(&mut self, tax: &Path) -> Result<(), Box<dyn Error>> {
         let contents = fs::read_to_string(tax)?;
         let items: Vec<(&str, &str)> = contents
             .par_lines()
@@ -39,19 +39,36 @@ impl Metax {
     }
     fn use_vsearch(&mut self, vsearch: &Path) -> Result<(), Box<dyn Error>> {
         let contents = fs::read_to_string(vsearch)?;
-        for line in contents.lines() {
-            let mut split = line.split('\t');
-            let id = split.next().ok_or("No identitifier")?;
+        let things: Vec<_> = contents
+            .par_lines()
+            .filter_map(|line| {
+                let mut split = line.split('\t');
+                let Some(id) = split.next() else {
+                    eprintln!("No id for {}", line);
+                    return None;
+                };
+                let Some(target) = split.next() else {
+                    eprintln!("No target id for {}", line);
+                    return None;
+                };
+                let Some(identity) = split.next() else {
+                    eprintln!("No percentage of identity found for {}", line);
+                    return None;
+                };
+                let Some(len) = split.next() else {
+                    eprintln!("No length found for {}", line);
+                    return None;
+                };
+                Some((id, (target.to_owned(), identity.to_owned(), len.to_owned())))
+            })
+            .collect();
 
-            let target = split.next().ok_or("No target id found")?.to_string();
-            let idea = split.next().ok_or("No ID found")?.to_string();
-            let len = split.next().ok_or("No length found")?.to_string();
-
+        for (id, o) in things.into_iter() {
             let Some(thing) = self.tax.get_mut(id) else {
                 eprintln!("No key named {}.", id);
                 continue;
             };
-            thing.1 = Some((target, idea, len));
+            thing.1 = Some(o);
         }
 
         Ok(())
@@ -78,7 +95,7 @@ impl Metax {
     }
     pub fn build(config: &Config) -> Result<Self, Box<dyn Error>> {
         let mut out = Self::default();
-        out.multi_make_tax(&config.taxonomy)?;
+        out.make_tax(&config.taxonomy)?;
         out.use_vsearch(&config.vsearch_output)?;
 
         Ok(out)
