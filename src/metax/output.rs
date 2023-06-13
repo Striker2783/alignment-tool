@@ -37,16 +37,6 @@ impl Metax {
         }
         Ok(())
     }
-    fn make_tax(&mut self, tax: &Path) -> Result<(), Box<dyn Error>> {
-        let contents = fs::read_to_string(tax)?;
-        for line in contents.lines() {
-            let mut split = line.trim().split('\t');
-            let name = split.next().ok_or("No identifier found")?.to_string();
-            let line = split.next().ok_or("No other data found")?.to_string();
-            self.tax.insert(name, (line, None));
-        }
-        Ok(())
-    }
     fn use_vsearch(&mut self, vsearch: &Path) -> Result<(), Box<dyn Error>> {
         let contents = fs::read_to_string(vsearch)?;
         for line in contents.lines() {
@@ -88,7 +78,7 @@ impl Metax {
     }
     pub fn build(config: &Config) -> Result<Self, Box<dyn Error>> {
         let mut out = Self::default();
-        out.make_tax(&config.taxonomy)?;
+        out.multi_make_tax(&config.taxonomy)?;
         out.use_vsearch(&config.vsearch_output)?;
 
         Ok(out)

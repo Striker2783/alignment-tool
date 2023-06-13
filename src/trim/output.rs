@@ -19,20 +19,16 @@ impl Trim {
         Ok(())
     }
     fn get_x(lineage: &mut Vec<&str>, pi: f64) -> Option<String> {
-        if lineage.len() < 8 {
-            for _ in 0..(8 - lineage.len()) {
-                lineage.push("");
-            }
-        }
+        let len = lineage.len();
 
         if pi >= 98. {
-            Some(lineage[0..7].join(";"))
+            Some(lineage[0..7.min(len)].join(";"))
         } else if pi >= 96. {
-            Some(lineage[0..6].join(";"))
+            Some(lineage[0..6.min(len)].join(";"))
         } else if pi >= 85. {
-            Some(lineage[0..5].join(";"))
+            Some(lineage[0..5.min(len)].join(";"))
         } else if pi >= 80. {
-            Some(lineage[0..4].join(";"))
+            Some(lineage[0..4.min(len)].join(";"))
         } else {
             None
         }
