@@ -41,26 +41,7 @@ impl Metax {
         let contents = fs::read_to_string(vsearch)?;
         let things: Vec<_> = contents
             .par_lines()
-            .filter_map(|line| {
-                let mut split = line.split('\t');
-                let Some(id) = split.next() else {
-                    eprintln!("No id for {}", line);
-                    return None;
-                };
-                let Some(target) = split.next() else {
-                    eprintln!("No target id for {}", line);
-                    return None;
-                };
-                let Some(identity) = split.next() else {
-                    eprintln!("No percentage of identity found for {}", line);
-                    return None;
-                };
-                let Some(len) = split.next() else {
-                    eprintln!("No length found for {}", line);
-                    return None;
-                };
-                Some((id, (target.to_owned(), identity.to_owned(), len.to_owned())))
-            })
+            .filter_map(Self::filter_vsearch_line)
             .collect();
 
         for (id, o) in things.into_iter() {
@@ -99,5 +80,26 @@ impl Metax {
         out.use_vsearch(&config.vsearch_output)?;
 
         Ok(out)
+    }
+
+    fn filter_vsearch_line(line: &str) -> Option<(&str, (String, String, String))> {
+        let mut split = line.split('\t');
+        let Some(id) = split.next() else {
+        eprintln!("No id for {}", line);
+        return None;
+    };
+        let Some(target) = split.next() else {
+        eprintln!("No target id for {}", line);
+        return None;
+    };
+        let Some(identity) = split.next() else {
+        eprintln!("No percentage of identity found for {}", line);
+        return None;
+    };
+        let Some(len) = split.next() else {
+        eprintln!("No length found for {}", line);
+        return None;
+    };
+        Some((id, (target.to_owned(), identity.to_owned(), len.to_owned())))
     }
 }
