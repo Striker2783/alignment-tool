@@ -14,9 +14,9 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             k_fold: 5,
+            dir: Default::default(),
             fasta: Default::default(),
             tax: Default::default(),
-            dir: Default::default(),
         }
     }
 }
@@ -29,8 +29,8 @@ impl Config {
             return Ok(Config {
                 tax,
                 fasta,
-                dir,
                 k_fold: k.parse()?,
+                dir,
             });
         }
 

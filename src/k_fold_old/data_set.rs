@@ -3,43 +3,44 @@ use std::{
     fs::{self, File},
     io::{BufWriter, Write},
     path::Path,
+    sync::{Arc, Mutex},
 };
 
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
-use super::config::Config;
+use crate::k_fold_ignore::config::Config;
 
-use super::{Data, Storage};
+use super::{Species, Storage};
 
 #[derive(Debug, Default)]
 pub struct Total(Vec<Dataset>);
 
-type DatasetData = Vec<(String, Data)>;
-
+type SpeciesVec = Vec<Arc<Mutex<Species>>>;
 #[derive(Debug, Default)]
 pub struct Dataset {
     #[allow(dead_code)]
-    training: DatasetData,
+    training: SpeciesVec,
     #[allow(dead_code)]
-    testing: DatasetData,
+    testing: SpeciesVec,
 }
 
 impl Dataset {
     #[inline]
-    pub fn new(training: DatasetData, testing: DatasetData) -> Self {
+    pub fn new(training: SpeciesVec, testing: SpeciesVec) -> Self {
         Self { training, testing }
     }
-    fn create_tax_file(species: &DatasetData, file: &mut File) {
+    fn create_tax_file(species: &SpeciesVec, file: &mut File) {
         let mut writer = BufWriter::new(file);
-        for (name, (tax, _)) in species {
-            let _ = writeln!(writer, "{name}\t{tax}");
+        for species in species {
+            let Ok(species) = species.lock() else {continue;};
+            let _ = writeln!(writer, "{}", &species.get_tax());
         }
     }
-    fn create_fasta_file(species: &DatasetData, file: &mut File) {
+    fn create_fasta_file(species: &SpeciesVec, file: &mut File) {
         let mut writer = BufWriter::new(file);
-        for (name, (_, genome)) in species {
-            let Some(genome) = genome else {continue;};
-            let _ = writeln!(writer, ">{name}\n{genome}");
+        for species in species {
+            let Ok(species) = species.lock() else {continue;};
+            let _ = writeln!(writer, "{}", &species.get_fasta());
         }
     }
     pub fn create_files(&self, directory: &Path) -> Result<(), Box<dyn Error>> {
@@ -89,7 +90,7 @@ impl Total {
         let values: Vec<_> = storage
             .data
             .par_iter()
-            .map(|(name, species)| (name.clone(), species.clone()))
+            .map(|(_, species)| Arc::clone(species))
             .collect();
 
         for i in 0..k {
@@ -105,9 +106,9 @@ impl Total {
                 [&values[..lower], &values[upper..]]
                     .concat()
                     .par_iter()
-                    .map(|x| x.clone())
+                    .map(Arc::clone)
                     .collect(),
-                values[lower..upper].par_iter().map(|x| x.clone()).collect(),
+                values[lower..upper].par_iter().map(Arc::clone).collect(),
             );
             total.0.push(data_set);
         }

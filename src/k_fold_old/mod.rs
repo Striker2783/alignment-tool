@@ -1,18 +1,25 @@
 pub mod config;
 pub mod data_set;
+pub mod species;
 
-use std::{collections::HashMap, error::Error, fs, path::Path};
+use std::{
+    collections::HashMap,
+    error::Error,
+    fs,
+    path::Path,
+    sync::{Arc, Mutex},
+};
 
-use rayon::{prelude::ParallelIterator, str::ParallelString};
+use rayon::{prelude::ParallelIterator, slice::ParallelSlice, str::ParallelString};
+use species::Species;
 
 fn read_file<P: AsRef<Path>>(path: P) -> Result<String, Box<dyn Error>> {
     Ok(fs::read_to_string(path)?)
 }
-type Data = (String, Option<String>);
-
+type MultiMut<T> = Arc<Mutex<T>>;
 #[derive(Default, Debug)]
 pub struct Storage {
-    data: HashMap<String, Data>,
+    data: HashMap<Arc<String>, MultiMut<Species>>,
 }
 
 impl Storage {
@@ -24,20 +31,14 @@ impl Storage {
         let thing: Vec<_> = contents
             .par_lines()
             .filter_map(|line| {
-                let mut split = line.split('\t');
-                let Some(name) = split.next() else {
-                    return None;
-                };
-                let name = name.to_string();
-                let Some(species) = split.next() else {
-                    return None;
-                };
-                let species = species.to_string();
+                let Ok(species) = Species::build(line) else {return None;};
+                let name = Arc::clone(&species.name);
+                let species = Arc::new(Mutex::new(species));
                 Some((name, species))
             })
             .collect();
         for (name, species) in thing.into_iter() {
-            self.data.insert(name, (species, None));
+            self.data.insert(name, species);
         }
         Ok(())
     }
@@ -45,16 +46,17 @@ impl Storage {
         let contents = read_file(path)?;
 
         contents
-            .lines()
+            .par_lines()
             .collect::<Vec<_>>()
-            .chunks_exact(2)
+            .par_chunks_exact(2)
             .for_each(|line| {
                 let name = &line[0][1..];
-                let genome = line[1];
-                let Some((_,x)) = self.data.get_mut(name) else {
+                let Some(x) = self.data.get(&Arc::new(name.to_owned())) else {
                     return;
                 };
-                *x = Some(genome.to_string());
+                let clone = Arc::clone(x);
+                let mut species = clone.lock().unwrap();
+                species.genome = line[1].to_owned();
             });
 
         Ok(())
