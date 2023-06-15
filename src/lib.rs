@@ -1,9 +1,11 @@
 use std::{env::Args, error::Error};
 
+use confusion_matrix::config::Config as confusion_config;
 use k_fold::config::Config as k_config;
 use metax::config::Config as metax_config;
 use trim::config::Config as trim_config;
 
+pub mod confusion_matrix;
 pub mod k_fold;
 pub mod metax;
 pub mod trim;
@@ -12,12 +14,14 @@ fn print_help() {
     eprintln!("k (tax_file) (fasta_file) (k = 5)");
     eprintln!("meta (tax_file) (vsearch_file) (output file)");
     eprintln!("trim (meta_file) (output file)");
+    eprintln!("conf_mat (tax_file) (trim files directory) (Output file)")
 }
 
 pub enum Configs {
     K(k_config),
     Metax(metax_config),
     Trim(trim_config),
+    Confusion(confusion_config),
     Help,
 }
 
@@ -36,6 +40,10 @@ impl Configs {
             "trim" => {
                 let config = trim_config::build(args)?;
                 Ok(Self::Trim(config))
+            }
+            "conf_mat" => {
+                let config = confusion_config::build(args)?;
+                Ok(Self::Confusion(config))
             }
             "help" | "h" => {
                 print_help();

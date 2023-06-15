@@ -1,4 +1,5 @@
 use k_fold_cross_validation::{
+    confusion_matrix::{config::Config as confusion_config, confusion::Confusion},
     k_fold::{config::Config, data_set::Total},
     metax::{config::Config as meta_config, output::Metax},
     trim::{config::Config as trim_config, output::Trim},
@@ -33,6 +34,15 @@ fn trim(config: &trim_config) {
 
     println!("Trim: {} ms", time.elapsed().as_millis());
 }
+fn confusion(config: &confusion_config) {
+    let time = Instant::now();
+
+    if let Err(e) = Confusion::run(config) {
+        eprintln!("{e}");
+    }
+
+    println!("Trim: {} ms", time.elapsed().as_millis());
+}
 fn main() {
     let mut args = env::args();
     args.next();
@@ -49,5 +59,6 @@ fn main() {
         Configs::Metax(config) => meta(&config),
         Configs::Trim(config) => trim(&config),
         Configs::Help => (),
+        Configs::Confusion(config) => confusion(&config),
     }
 }
