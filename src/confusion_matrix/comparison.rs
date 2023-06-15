@@ -1,4 +1,7 @@
-use std::sync::{Arc, Weak};
+use std::{
+    fmt::Display,
+    sync::{Arc, Weak},
+};
 
 use super::species::Species;
 
@@ -16,18 +19,31 @@ pub enum PossibleValues {
     /// True Positive -: Both have labels that are difference
     TPN,
 }
+
+impl Display for PossibleValues {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PossibleValues::TN => write!(f, "TN"),
+            PossibleValues::FP => write!(f, "FP"),
+            PossibleValues::FN => write!(f, "FN"),
+            PossibleValues::TPP => write!(f, "TPP"),
+            PossibleValues::TPN => write!(f, "TPN"),
+        }
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct Comparison {
-    species1: Weak<Species>,
-    species2: Weak<Species>,
-    values: Vec<PossibleValues>,
+    pub(crate) actual: Weak<Species>,
+    pub(crate) predicted: Weak<Species>,
+    pub(crate) values: Vec<PossibleValues>,
 }
 
 impl Comparison {
     pub fn build(actual: Arc<Species>, predicted: Arc<Species>) -> Self {
         Self {
-            species1: Arc::downgrade(&actual),
-            species2: Arc::downgrade(&predicted),
+            actual: Arc::downgrade(&actual),
+            predicted: Arc::downgrade(&predicted),
             values: vec![
                 Self::get_something(&actual.kingdom, &predicted.kingdom),
                 Self::get_something(&actual.phylum, &predicted.phylum),
@@ -38,6 +54,18 @@ impl Comparison {
                 Self::get_something(&actual.species, &predicted.species),
             ],
         }
+    }
+    pub fn get_values(&self) -> String {
+        format!(
+            "k__{};p__{};c__{};o__{};f__{};g__{};s__{}",
+            self.values[0],
+            self.values[1],
+            self.values[2],
+            self.values[3],
+            self.values[4],
+            self.values[5],
+            self.values[6]
+        )
     }
     fn get_something(actual: &Option<String>, predicted: &Option<String>) -> PossibleValues {
         match (actual, predicted) {
