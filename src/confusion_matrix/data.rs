@@ -1,10 +1,10 @@
-use std::{collections::HashMap, error::Error, fs, path::Path};
+use std::{collections::HashMap, error::Error, fs, path::Path, sync::Arc};
 
 use super::{config::Config, species::Species};
 #[derive(Debug, Default)]
 pub struct Data {
-    actual: HashMap<String, Species>,
-    predicted: HashMap<String, Species>,
+    actual: HashMap<String, Arc<Species>>,
+    predicted: HashMap<String, Arc<Species>>,
 }
 
 impl Data {
@@ -19,7 +19,7 @@ impl Data {
         for line in contents.lines() {
             let species = Species::build(line)?;
             let name = species.name.to_string();
-            self.actual.insert(name, species);
+            self.actual.insert(name, Arc::new(species));
         }
 
         Ok(())
@@ -34,7 +34,7 @@ impl Data {
             for line in contents.lines() {
                 let species = Species::build(line)?;
                 let name = species.name.to_string();
-                self.predicted.insert(name, species);
+                self.predicted.insert(name, Arc::new(species));
             }
         }
         Ok(())

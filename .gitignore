@@ -5,3 +5,4 @@ output.txt
 /vsearch-2.22.1-win-x86_64
 /*.txt
 flamegraph.svg
+/trim
