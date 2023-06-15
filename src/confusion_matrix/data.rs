@@ -1,10 +1,11 @@
 use std::{collections::HashMap, error::Error, fs, path::Path, sync::Arc};
 
-use super::{config::Config, species::Species};
+use super::{comparison::Comparison, config::Config, species::Species};
 #[derive(Debug, Default)]
 pub struct Data {
     actual: HashMap<String, Arc<Species>>,
     predicted: HashMap<String, Arc<Species>>,
+    comparisons: Vec<Comparison>,
 }
 
 impl Data {
