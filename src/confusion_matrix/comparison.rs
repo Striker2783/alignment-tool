@@ -34,7 +34,7 @@ impl Display for PossibleValues {
 
 #[derive(Debug, Default)]
 pub struct Comparison {
-    pub(crate) actual: Weak<Species>,
+    pub(crate) _actual: Weak<Species>,
     pub(crate) predicted: Weak<Species>,
     pub(crate) values: Vec<PossibleValues>,
 }
@@ -42,7 +42,7 @@ pub struct Comparison {
 impl Comparison {
     pub fn build(actual: Arc<Species>, predicted: Arc<Species>) -> Self {
         Self {
-            actual: Arc::downgrade(&actual),
+            _actual: Arc::downgrade(&actual),
             predicted: Arc::downgrade(&predicted),
             values: vec![
                 Self::get_something(&actual.kingdom, &predicted.kingdom),

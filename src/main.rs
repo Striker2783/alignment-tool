@@ -41,7 +41,7 @@ fn confusion(config: &confusion_config) {
         eprintln!("{e}");
     }
 
-    println!("Trim: {} ms", time.elapsed().as_millis());
+    println!("Confusion Matrix: {} ms", time.elapsed().as_millis());
 }
 fn main() {
     let mut args = env::args();
