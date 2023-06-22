@@ -7,4 +7,9 @@ edition = "2021"
 debug = true
 
 [dependencies]
+egui = "0.22.0"
 rayon = "1.7.0"
+commands = {path="commands/"}
+
+[workspace]
+members = ["commands/"]

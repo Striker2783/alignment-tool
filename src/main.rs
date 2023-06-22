@@ -1,4 +1,4 @@
-use k_fold_cross_validation::{
+use commands::{
     confusion_matrix::{config::Config as confusion_config, confusion::Confusion},
     k_fold::{config::Config, data_set::Total},
     metax::{config::Config as meta_config, output::Metax},
