@@ -10,6 +10,14 @@ pub struct ConfusionConfig {
     pub(crate) out: PathBuf,
 }
 impl ConfusionConfig {
+    pub fn new(tax: PathBuf, predicted_dir: PathBuf, out: PathBuf) -> Self {
+        Self {
+            tax,
+            predicted_dir,
+            out,
+        }
+    }
+
     pub fn build(args: &mut Args) -> Result<Self, Box<dyn Error>> {
         let dir = env::current_dir()?;
         let tax = args.next().ok_or("No tax inputted")?;

@@ -10,6 +10,10 @@ pub struct TrimConfig {
 }
 
 impl TrimConfig {
+    pub fn new(meta: PathBuf, out: PathBuf) -> Self {
+        Self { meta, out }
+    }
+
     pub fn build(args: &mut Args) -> Result<Self, Box<dyn Error>> {
         let dir = env::current_dir()?;
         let meta = args.next().ok_or("Failed to get tax argument")?;

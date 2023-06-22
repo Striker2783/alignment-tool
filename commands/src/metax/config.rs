@@ -11,6 +11,14 @@ pub struct MetaxConfig {
 }
 
 impl MetaxConfig {
+    pub fn new(taxonomy: PathBuf, vsearch_output: PathBuf, output: PathBuf) -> Self {
+        Self {
+            taxonomy,
+            vsearch_output,
+            output,
+        }
+    }
+
     pub fn build(args: &mut Args) -> Result<Self, Box<dyn Error>> {
         let dir = env::current_dir()?;
         let taxonomy = args.next().ok_or("No taxonomy file provided")?;

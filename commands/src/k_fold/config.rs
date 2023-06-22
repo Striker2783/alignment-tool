@@ -21,6 +21,15 @@ impl Default for KFoldConfig {
     }
 }
 impl KFoldConfig {
+    pub fn new(tax: String, fasta: String, k_fold: u32, dir: PathBuf) -> Self {
+        Self {
+            tax,
+            fasta,
+            k_fold,
+            dir,
+        }
+    }
+
     pub fn build(args: &mut Args) -> Result<Self, Box<dyn Error>> {
         let tax = args.next().ok_or("No tax argument")?;
         let fasta = args.next().ok_or("No Fasta argument")?;
