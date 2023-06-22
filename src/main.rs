@@ -1,13 +1,13 @@
 use commands::{
-    confusion_matrix::{config::Config as confusion_config, confusion::Confusion},
-    k_fold::{config::Config, data_set::Total},
-    metax::{config::Config as meta_config, output::Metax},
-    trim::{config::Config as trim_config, output::Trim},
+    confusion_matrix::{config::ConfusionConfig as confusion_config, confusion::Confusion},
+    k_fold::{config::KFoldConfig, data_set::Total},
+    metax::{config::MetaxConfig as meta_config, output::Metax},
+    trim::{config::TrimConfig as trim_config, output::Trim},
     Configs,
 };
 use std::{env, process, time::Instant};
 
-fn k_fold(config: &Config) {
+fn k_fold(config: &KFoldConfig) {
     let time = Instant::now();
 
     if let Err(e) = Total::run(config) {

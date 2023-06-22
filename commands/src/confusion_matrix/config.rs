@@ -4,12 +4,12 @@ use std::{
     path::PathBuf,
 };
 
-pub struct Config {
+pub struct ConfusionConfig {
     pub(crate) tax: PathBuf,
     pub(crate) predicted_dir: PathBuf,
     pub(crate) out: PathBuf,
 }
-impl Config {
+impl ConfusionConfig {
     pub fn build(args: &mut Args) -> Result<Self, Box<dyn Error>> {
         let dir = env::current_dir()?;
         let tax = args.next().ok_or("No tax inputted")?;

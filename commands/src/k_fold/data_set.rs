@@ -7,7 +7,7 @@ use std::{
 
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
-use super::config::Config;
+use super::config::KFoldConfig;
 
 use super::{Data, Storage};
 
@@ -72,7 +72,7 @@ impl Dataset {
 }
 
 impl Total {
-    pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
+    pub fn run(config: &KFoldConfig) -> Result<(), Box<dyn Error>> {
         let mut storage = Storage::default();
         storage.load_tax_file(&config.tax)?;
         storage.load_fasta_file(&config.fasta)?;

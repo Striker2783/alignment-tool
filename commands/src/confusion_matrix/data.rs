@@ -7,7 +7,7 @@ use std::{
     sync::Arc,
 };
 
-use super::{comparison::Comparison, config::Config, species::Species};
+use super::{comparison::Comparison, config::ConfusionConfig, species::Species};
 type Comparisons = Vec<Comparison>;
 
 #[derive(Debug, Default)]
@@ -18,7 +18,7 @@ pub struct Data {
 }
 
 impl Data {
-    pub fn build(config: &Config) -> Result<Self, Box<dyn Error>> {
+    pub fn build(config: &ConfusionConfig) -> Result<Self, Box<dyn Error>> {
         let mut new = Self::default();
         new.fill_actual(&config.tax)?;
         new.fill_predicted(&config.predicted_dir)?;

@@ -4,13 +4,13 @@ use std::{
     path::PathBuf,
 };
 
-pub struct Config {
+pub struct MetaxConfig {
     pub(crate) taxonomy: PathBuf,
     pub(crate) vsearch_output: PathBuf,
     pub(crate) output: PathBuf,
 }
 
-impl Config {
+impl MetaxConfig {
     pub fn build(args: &mut Args) -> Result<Self, Box<dyn Error>> {
         let dir = env::current_dir()?;
         let taxonomy = args.next().ok_or("No taxonomy file provided")?;
@@ -22,7 +22,7 @@ impl Config {
         let output = args.next().ok_or("No output provided")?;
         let output = dir.join(output);
 
-        Ok(Config {
+        Ok(MetaxConfig {
             taxonomy,
             vsearch_output,
             output,

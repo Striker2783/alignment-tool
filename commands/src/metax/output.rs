@@ -8,7 +8,7 @@ use std::{
 
 use rayon::{prelude::ParallelIterator, str::ParallelString};
 
-use super::config::Config;
+use super::config::MetaxConfig;
 
 type Val = (String, Option<(String, String, String)>);
 
@@ -69,12 +69,12 @@ impl Metax {
         }
         Ok(())
     }
-    pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
+    pub fn run(config: &MetaxConfig) -> Result<(), Box<dyn Error>> {
         let new = Self::build(config)?;
         new.out(&config.output)?;
         Ok(())
     }
-    pub fn build(config: &Config) -> Result<Self, Box<dyn Error>> {
+    pub fn build(config: &MetaxConfig) -> Result<Self, Box<dyn Error>> {
         let mut out = Self::default();
         out.make_tax(&config.taxonomy)?;
         out.use_vsearch(&config.vsearch_output)?;

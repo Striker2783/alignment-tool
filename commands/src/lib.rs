@@ -1,9 +1,9 @@
 use std::{env::Args, error::Error};
 
-use confusion_matrix::config::Config as confusion_config;
-use k_fold::config::Config as k_config;
-use metax::config::Config as metax_config;
-use trim::config::Config as trim_config;
+use confusion_matrix::config::ConfusionConfig as confusion_config;
+use k_fold::config::KFoldConfig as k_config;
+use metax::config::MetaxConfig as metax_config;
+use trim::config::TrimConfig as trim_config;
 
 pub mod confusion_matrix;
 pub mod k_fold;

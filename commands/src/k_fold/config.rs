@@ -4,13 +4,13 @@ use std::{
     path::PathBuf,
 };
 
-pub struct Config {
+pub struct KFoldConfig {
     pub(crate) tax: String,
     pub(crate) fasta: String,
     pub(crate) k_fold: u32,
     pub(crate) dir: PathBuf,
 }
-impl Default for Config {
+impl Default for KFoldConfig {
     fn default() -> Self {
         Self {
             k_fold: 5,
@@ -20,13 +20,13 @@ impl Default for Config {
         }
     }
 }
-impl Config {
+impl KFoldConfig {
     pub fn build(args: &mut Args) -> Result<Self, Box<dyn Error>> {
         let tax = args.next().ok_or("No tax argument")?;
         let fasta = args.next().ok_or("No Fasta argument")?;
         let dir = env::current_dir()?;
         if let Some(k) = args.next() {
-            return Ok(Config {
+            return Ok(KFoldConfig {
                 tax,
                 fasta,
                 dir,
@@ -34,7 +34,7 @@ impl Config {
             });
         }
 
-        Ok(Config {
+        Ok(KFoldConfig {
             tax,
             fasta,
             dir,

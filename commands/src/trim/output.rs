@@ -8,14 +8,14 @@ use std::{
 
 use rayon::{prelude::ParallelIterator, str::ParallelString};
 
-use super::config::Config;
+use super::config::TrimConfig;
 #[derive(Debug, Default)]
 pub struct Trim {
     map: HashMap<String, String>,
 }
 
 impl Trim {
-    pub fn run(config: &Config) -> Result<(), Box<dyn Error>> {
+    pub fn run(config: &TrimConfig) -> Result<(), Box<dyn Error>> {
         let trim = Self::build(&config.meta)?;
         trim.out(&config.out)?;
         Ok(())
